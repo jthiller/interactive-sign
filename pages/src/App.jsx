@@ -1,77 +1,107 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import ColorFAB from './components/ColorFAB'
 import ColorPanel from './components/ColorPanel'
+import VideoPlayer from './components/VideoPlayer'
 
 function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [isVideoConnected, setIsVideoConnected] = useState(false)
+  const [theme, setTheme] = useState('light')
+
+  const handleVideoConnection = useCallback((connected) => {
+    setIsVideoConnected(connected)
+  }, [])
+
+  const handleThemeChange = useCallback((newTheme) => {
+    setTheme(newTheme)
+  }, [])
+
+  const pageClasses = [
+    'page',
+    isVideoConnected && 'page--video-active',
+    isVideoConnected && theme === 'dark' && 'page--dark',
+  ].filter(Boolean).join(' ')
 
   return (
-    <div className="b">
-      <main className="c">
+    <div className={pageClasses}>
+      <VideoPlayer
+        onConnectionChange={handleVideoConnection}
+        onThemeChange={handleThemeChange}
+      />
+
+      <main className="card">
         <h1>Hey, I'm Joey Hiller.</h1>
-        <p className="pp">
-          <span className="p">
+
+        <div className="intro">
+          <p>
             I'm a technologist and builder currently living in the San Francisco Bay Area.
             Currently supporting decentralized communication networks at Helium.
-          </span>
-        </p>
+          </p>
+        </div>
 
-        <div className="r">
-          <div className="rl">Now</div>
-          <div className="rc">
+        <div className="resume-row">
+          <div className="resume-row__label">Now</div>
+          <div className="resume-row__content">
             Director, Network Product<br />
-            <span className="co">Helium</span>
+            <span className="company">Helium</span>
           </div>
         </div>
 
-        <div className="r x">
-          <div className="rl">Then</div>
-          <div className="rc">
+        <div className="resume-row resume-row--compact">
+          <div className="resume-row__label">Then</div>
+          <div className="resume-row__content">
             Advisor, Lead Product Designer<br />
-            <span className="co">Lumanu</span>
-          </div>
-        </div>
-        <div className="r x">
-          <div className="rl"></div>
-          <div className="rc">
-            Product Designer<br />
-            <span className="co">Ravel </span>
-            <span className="acq">(Acquired by Lexis Nexis)</span>
-          </div>
-        </div>
-        <div className="r">
-          <div className="rl"></div>
-          <div className="rc">
-            Web Designer<br />
-            <span className="co">Joby </span>
-            <span className="acq">(Acquired by Vitec Group)</span>
+            <span className="company">Lumanu</span>
           </div>
         </div>
 
-        <div className="r x">
-          <div className="rl">Edu</div>
-          <div className="rc">
-            iOS for Designers<br />
-            <span className="co">CodePath</span>
+        <div className="resume-row resume-row--compact">
+          <div className="resume-row__label"></div>
+          <div className="resume-row__content">
+            Product Designer<br />
+            <span className="company">Ravel</span>
+            <span className="acquisition-note">(Acquired by Lexis Nexis)</span>
           </div>
         </div>
-        <div className="r">
-          <div className="rl"></div>
-          <div className="rc">
+
+        <div className="resume-row">
+          <div className="resume-row__label"></div>
+          <div className="resume-row__content">
+            Web Designer<br />
+            <span className="company">Joby</span>
+            <span className="acquisition-note">(Acquired by Vitec Group)</span>
+          </div>
+        </div>
+
+        <div className="resume-row resume-row--compact">
+          <div className="resume-row__label">Edu</div>
+          <div className="resume-row__content">
+            iOS for Designers<br />
+            <span className="company">CodePath</span>
+          </div>
+        </div>
+
+        <div className="resume-row">
+          <div className="resume-row__label"></div>
+          <div className="resume-row__content">
             Studio Art<br />
-            <span className="co">Humboldt State University</span>
+            <span className="company">Humboldt State University</span>
           </div>
         </div>
       </main>
 
-      <ColorFAB
-        isOpen={isPanelOpen}
-        onClick={() => setIsPanelOpen(!isPanelOpen)}
-      />
-      <ColorPanel
-        isOpen={isPanelOpen}
-        onClose={() => setIsPanelOpen(false)}
-      />
+      {isVideoConnected && (
+        <>
+          <ColorFAB
+            isOpen={isPanelOpen}
+            onClick={() => setIsPanelOpen(!isPanelOpen)}
+          />
+          <ColorPanel
+            isOpen={isPanelOpen}
+            onClose={() => setIsPanelOpen(false)}
+          />
+        </>
+      )}
     </div>
   )
 }

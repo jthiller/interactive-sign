@@ -6,8 +6,12 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/led': 'http://localhost:8787',
-      '/queue': 'http://localhost:8787',
+      '/led': 'https://interactive-sign.jthiller.workers.dev',
+      '/queue': 'https://interactive-sign.jthiller.workers.dev',
+      '/video': 'https://interactive-sign.jthiller.workers.dev',
+      '/uplink': 'https://interactive-sign.jthiller.workers.dev',
+      '/track': 'https://interactive-sign.jthiller.workers.dev',
+      '/partytracks': 'https://interactive-sign.jthiller.workers.dev',
     }
   }
 })

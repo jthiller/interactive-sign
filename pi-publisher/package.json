@@ -1,0 +1,14 @@
+{
+  "name": "pi-publisher",
+  "version": "1.0.0",
+  "description": "Node.js video publisher for Cloudflare Realtime",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@roamhq/wrtc": "^0.8.0",
+    "node-fetch": "^3.3.2"
+  }
+}

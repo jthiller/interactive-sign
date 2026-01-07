@@ -3,13 +3,37 @@ main = "src/worker.js"
 compatibility_date = "2024-08-06"
 compatibility_flags = ["nodejs_compat"]
 
-# All env vars are in .dev.vars for local development
-# For production, set these via wrangler secret put:
-#   wrangler secret put CHIRPSTACK_API
-#   wrangler secret put CHIRPSTACK_API_URL
-#   wrangler secret put CHIRPSTACK_BUSYLIGHT_DEVICE_ID
+[dev]
+port = 8787
 
-# KV namespace - create with: wrangler kv namespace create STATE_KV
-# kv_namespaces = [
-#   { binding = "STATE_KV", id = "<id-after-creation>" }
-# ]
+# Track Registry Durable Object for coordinating Pi → Viewer
+[durable_objects]
+bindings = [
+  { name = "TRACK_REGISTRY", class_name = "TrackRegistry" }
+]
+
+# Migration v1 created SignalingDO, v2 replaces it with TrackRegistry
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SignalingDO"]
+
+[[migrations]]
+tag = "v2"
+deleted_classes = ["SignalingDO"]
+new_sqlite_classes = ["TrackRegistry"]
+
+# Public env vars (not secrets)
+[vars]
+CLOUDFLARE_CALLS_APP_ID = "b682965fd7d14854d6131411c3256b5b"
+CHIRPSTACK_API_URL = "https://console.meteoscientific.com/api"
+
+# Secrets: Set via wrangler secret put
+#   wrangler secret put CLOUDFLARE_CALLS_API_TOKEN
+#   wrangler secret put CLOUDFLARE_TURN_KEY_ID
+#   wrangler secret put CLOUDFLARE_TURN_API_TOKEN
+#   wrangler secret put CHIRPSTACK_API
+#   wrangler secret put CHIRPSTACK_BUSYLIGHT_DEVICE_ID
+#
+# Security secrets (optional but recommended):
+#   wrangler secret put PI_PUBLISHER_SECRET         # Authenticates Pi publisher for /track/register
+#   wrangler secret put CHIRPSTACK_WEBHOOK_SECRET   # Authenticates ChirpStack uplink webhooks

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { HexColorPicker } from 'react-colorful'
 import { useRateLimit } from '../hooks/useRateLimit'
 import QueueStatus from './QueueStatus'
+import { API_BASE } from '../config'
 
 // Convert hex to RGB
 function hexToRgb(hex) {
@@ -45,7 +46,7 @@ export default function ColorPanel({ isOpen, onClose }) {
 
     const fetchQueue = async () => {
       try {
-        const res = await fetch('/queue')
+        const res = await fetch(`${API_BASE}/queue`)
         const data = await res.json()
         setQueueDepth(data.queueDepth || 0)
       } catch (err) {
@@ -66,7 +67,7 @@ export default function ColorPanel({ isOpen, onClose }) {
 
     setIsSubmitting(true)
     try {
-      const res = await fetch('/led', {
+      const res = await fetch(`${API_BASE}/led`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rgb)

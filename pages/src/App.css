@@ -1,3 +1,48 @@
+/* ============================================
+   CSS Custom Properties
+   ============================================ */
+:root {
+  --color-text: #28292b;
+  --color-text-muted: #5a5c62;
+  --color-background: #fefefe;
+  --color-card-bg: rgba(255, 255, 255, 0.12);
+  --color-card-shadow: rgba(0, 0, 0, 0.12);
+
+  --font-family: museo-sans, sans-serif;
+  --font-size-base: 14px;
+  --font-size-sm: 12px;
+  --font-size-xs: 10px;
+  --font-size-h1: 36px;
+
+  --spacing-xs: 10px;
+  --spacing-sm: 16px;
+  --spacing-md: 24px;
+  --spacing-lg: 40px;
+  --spacing-xl: 50px;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+
+  --transition-fast: 0.2s ease;
+  --transition-slow: 1s ease;
+  --transition-theme: 0.5s ease;
+}
+
+/* ============================================
+   Dark Theme
+   ============================================ */
+.page--dark {
+  --color-text: #b81a1a;
+  --color-text-muted: #b8b8bd;
+  --color-background: #1a1a1b;
+  --color-card-bg: rgba(0, 0, 0, 0.12);
+  --color-card-shadow: rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
 * {
   margin: 0;
   padding: 0;
@@ -5,114 +50,175 @@
 }
 
 body {
-  font-family: museo-sans, sans-serif;
-  color: #28292b;
-  font-size: 14px;
-  line-height: 20px;
+  font-family: var(--font-family);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
   font-weight: 500;
+  transition: color var(--transition-theme);
 }
 
 h1 {
   display: inline-block;
-  margin-top: 0px;
   margin-bottom: 20px;
   background-image: url('/images/blur.jpg');
-  background-position: 0px 100%;
+  background-position: 0 100%;
   background-size: cover;
-  font-size: 36px;
-  line-height: 44px;
+  font-size: var(--font-size-h1);
+  line-height: 1.2;
   font-weight: 500;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  transition: color var(--transition-theme), background var(--transition-theme);
 }
 
-.b {
+/* When video is active, use solid text colors */
+.page--video-active h1 {
+  background: none;
+  -webkit-background-clip: unset;
+  background-clip: unset;
+  color: var(--color-text);
+}
+
+/* ============================================
+   Page Layout
+   ============================================ */
+.page {
   min-height: 100vh;
-  margin-right: 50px;
-  margin-left: 50px;
-  padding-right: 50px;
-  padding-left: 50px;
-  background-color: #fefefe;
+  padding: var(--spacing-xl) 100px;
+  background-color: var(--color-background);
   background-image: url('/images/blurbrush-v.jpg');
   background-position: 100% 100%;
   background-repeat: no-repeat;
+  transition: background-color var(--transition-slow), background-image 0.5s ease;
 }
 
-.c {
+.page--video-active {
+  background-image: none !important;
+  background-color: transparent;
+  --color-text: #1a1a1a;
+  --color-text-muted: #3d3d42;
+}
+
+.page--video-active.page--dark {
+  --color-text: #ffffff;
+  --color-text-muted: #d0d0d5;
+}
+
+/* ============================================
+   Card (Glassy Content Container)
+   ============================================ */
+.card {
+  display: inline-block;
+  max-width: 600px;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  margin-top: 18vh;
+  margin-bottom: 90px;
+  background: transparent;
+  border-radius: var(--radius-lg);
+  transition: background var(--transition-theme), box-shadow var(--transition-theme), backdrop-filter var(--transition-theme);
+}
+
+/* Glassy card only when video is active */
+.page--video-active .card {
+  background: var(--color-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px var(--color-card-shadow);
+}
+
+/* ============================================
+   Content Sections
+   ============================================ */
+.intro {
+  margin-bottom: var(--spacing-xl);
+  color: var(--color-text-muted);
+  transition: color var(--transition-theme);
+}
+
+.intro p {
   display: block;
-  max-width: 1024px;
-  margin-right: auto;
-  margin-left: auto;
-  padding-top: 18vh;
-  padding-bottom: 90px;
-}
-
-.pp {
-  width: 50%;
-  margin-bottom: 50px;
-  color: #75777d;
-}
-
-.p {
   padding-bottom: 0.75em;
-  display: block;
 }
 
-.r {
+/* ============================================
+   Resume Rows
+   ============================================ */
+.resume-row {
   display: flex;
-  margin-bottom: 50px;
   align-items: baseline;
+  margin-bottom: var(--spacing-xl);
   opacity: 0.7;
 }
 
-.r.x {
-  margin-bottom: 10px;
+.resume-row--compact {
+  margin-bottom: var(--spacing-xs);
 }
 
-.rl {
-  display: inline-block;
+.resume-row__label {
+  flex-shrink: 0;
   width: 60px;
-  color: #75777d;
-  font-size: 10px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
+  transition: color var(--transition-theme);
 }
 
-.rc {
-  display: inline-block;
+.resume-row__content {
+  flex: 1;
 }
 
-.co {
-  color: #75777d;
+.company {
+  color: var(--color-text-muted);
+  transition: color var(--transition-theme);
 }
 
-.acq {
+.acquisition-note {
   padding-left: 0.5em;
-  color: #75777d;
-  font-size: 12px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  transition: color var(--transition-theme);
 }
 
-/* Color FAB - styled like a color wheel matching the site */
+/* ============================================
+   Video Player
+   ============================================ */
+.video-container {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+}
+
+.video-player.connected {
+  opacity: 1;
+}
+
+/* ============================================
+   Color FAB
+   ============================================ */
 .color-fab {
   position: fixed;
-  bottom: 40px;
-  right: 40px;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
   z-index: 100;
   width: 48px;
   height: 48px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  background: conic-gradient(
-    from 0deg,
-    #ff6b6b,
-    #feca57,
-    #48dbfb,
-    #ff9ff3,
-    #ff6b6b
-  );
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  background: conic-gradient(from 0deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #ff6b6b);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
@@ -125,7 +231,7 @@ h1 {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fefefe;
+  background: var(--color-background);
 }
 
 .color-fab:hover {
@@ -138,7 +244,7 @@ h1 {
 }
 
 .color-fab.open::before {
-  background: #28292b;
+  background: var(--color-text);
   width: 2px;
   height: 16px;
   border-radius: 1px;
@@ -150,24 +256,26 @@ h1 {
   width: 16px;
   height: 2px;
   border-radius: 1px;
-  background: #28292b;
+  background: var(--color-text);
 }
 
-/* Color Panel */
+/* ============================================
+   Color Panel
+   ============================================ */
 .color-panel {
   position: fixed;
   bottom: 100px;
-  right: 40px;
+  right: var(--spacing-lg);
   z-index: 99;
   width: 260px;
   padding: 20px;
-  background: #fefefe;
-  border-radius: 12px;
+  background: var(--color-background);
+  border-radius: var(--radius-md);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
   transform: translateY(10px);
   opacity: 0;
   visibility: hidden;
-  transition: transform 0.2s ease, opacity 0.2s ease, visibility 0.2s ease;
+  transition: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast);
 }
 
 .color-panel.open {
@@ -177,7 +285,7 @@ h1 {
 }
 
 .color-panel .picker-container {
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .color-panel .react-colorful {
@@ -186,12 +294,12 @@ h1 {
 }
 
 .color-panel .react-colorful__saturation {
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
 .color-panel .react-colorful__hue {
   height: 16px;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
 
 .color-panel .react-colorful__pointer {
@@ -203,40 +311,40 @@ h1 {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: var(--spacing-sm);
 }
 
 .color-panel .color-preview {
   width: 36px;
   height: 36px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .color-panel .color-name {
-  font-size: 14px;
+  font-size: var(--font-size-base);
   font-weight: 500;
-  color: #28292b;
+  color: var(--color-text);
 }
 
 .color-panel .color-hex {
-  font-size: 12px;
-  color: #75777d;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   font-family: monospace;
 }
 
 .color-panel button.submit {
   width: 100%;
-  padding: 10px 16px;
+  padding: 10px var(--spacing-sm);
   border: none;
-  border-radius: 8px;
-  background: #28292b;
-  color: #fefefe;
-  font-family: museo-sans, sans-serif;
+  border-radius: var(--radius-sm);
+  background: var(--color-text);
+  color: var(--color-background);
+  font-family: var(--font-family);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-fast);
 }
 
 .color-panel button.submit:hover {
@@ -248,68 +356,76 @@ h1 {
   cursor: not-allowed;
 }
 
-/* Queue Status */
 .queue-status {
   text-align: center;
   margin-top: 12px;
-  font-size: 12px;
-  color: #75777d;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
-/* Responsive */
+/* ============================================
+   Responsive - Tablet
+   ============================================ */
 @media (max-width: 991px) {
-  .pp {
-    width: 100%;
-  }
-  .c {
-    padding-top: 120px;
-    padding-bottom: 240px;
-  }
-  .b {
-    margin-right: 0px;
-    margin-left: 0px;
-    padding-right: 100px;
-    padding-left: 100px;
+  .page {
+    padding: var(--spacing-lg) 80px;
     background-image: url('/images/blurbrush-h.jpg');
     background-position: 50% 100%;
     background-size: contain;
   }
+
+  .card {
+    margin-top: 120px;
+  }
+
+  .intro {
+    width: 100%;
+  }
 }
 
+/* ============================================
+   Responsive - Mobile
+   ============================================ */
 @media (max-width: 767px) {
-  .c {
-    padding-top: 100px;
-    padding-bottom: 180px;
+  .page {
+    padding: var(--spacing-md) var(--spacing-lg);
   }
-  .b {
-    margin-right: 0px;
-    margin-left: 0px;
-    padding-right: 60px;
-    padding-left: 60px;
+
+  .card {
+    margin-top: 100px;
+    padding: 30px 35px;
   }
+
   .color-fab {
-    bottom: 24px;
-    right: 24px;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
   }
+
   .color-panel {
     bottom: 84px;
-    right: 24px;
-    left: 24px;
+    right: var(--spacing-md);
+    left: var(--spacing-md);
     width: auto;
   }
 }
 
+/* ============================================
+   Responsive - Small Mobile
+   ============================================ */
 @media (max-width: 479px) {
-  h1 {
-    font-size: 28px;
+  :root {
+    --font-size-h1: 28px;
   }
-  .c {
-    padding-top: 50px;
-  }
-  .b {
-    padding-right: 30px;
-    padding-left: 30px;
-    background-position: 0px 100%;
+
+  .page {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-position: 0 100%;
     background-size: 130%;
+  }
+
+  .card {
+    margin-top: 50px;
+    padding: 25px;
+    border-radius: var(--radius-sm);
   }
 }

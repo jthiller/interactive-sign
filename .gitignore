@@ -1,3 +1,12 @@
 node_modules/
 .dev.vars
 .wrangler/
+pages/dist/
+
+# Secrets and environment files
+*.env
+.env.*
+pi-publisher/start.sh
+
+# Build artifacts
+architecture.png

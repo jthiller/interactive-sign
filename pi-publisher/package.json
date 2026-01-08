@@ -1,14 +1,13 @@
 {
   "name": "pi-publisher",
-  "version": "1.0.0",
-  "description": "Node.js video publisher for Cloudflare Realtime",
+  "version": "2.0.0",
+  "description": "H.264 video publisher for Cloudflare Realtime SFU using Werift",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@roamhq/wrtc": "^0.8.0",
-    "node-fetch": "^3.3.2"
+    "werift": "^0.19.9"
   }
 }

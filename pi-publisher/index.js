@@ -28,8 +28,8 @@ const HEARTBEAT_INTERVAL = 30000;
 // Video settings
 const WIDTH = 1280;
 const HEIGHT = 720;
-const FRAME_RATE = 10;
-const BITRATE = '800k'; // Adjusted for 720p @ 10fps
+const FRAME_RATE = 8;
+const BITRATE = '800k'; // Adjusted for 720p @ 8fps
 const WEBCAM_DEVICE = process.env.WEBCAM_DEVICE || '/dev/video0';
 
 // H.264 RTP payload type (dynamic, typically 96-127)

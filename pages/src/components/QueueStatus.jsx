@@ -12,10 +12,9 @@ export default function QueueStatus({ queueDepth, remainingTime, isSubmitting })
   }
 
   if (queueDepth > 0) {
-    const ahead = queueDepth
     return (
       <div className="queue-status waiting">
-        {ahead === 1 ? '1 color ahead of you' : `${ahead} colors ahead of you`}
+        {queueDepth === 1 ? '1 color in queue' : `${queueDepth}+ colors in queue`}
       </div>
     )
   }

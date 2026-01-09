@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    allowedHosts: ['.trycloudflare.com'],
     proxy: {
       '/led': 'https://interactive-sign.jthiller.workers.dev',
       '/queue': 'https://interactive-sign.jthiller.workers.dev',

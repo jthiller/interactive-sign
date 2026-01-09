@@ -3,4 +3,4 @@
 // In development, Vite proxies to localhost:8787
 const isDev = import.meta.env.DEV
 
-export const API_BASE = isDev ? '' : 'https://interactive-sign.jthiller.workers.dev'
+export const API_BASE = isDev ? '' : 'https://api.joeyhiller.com'

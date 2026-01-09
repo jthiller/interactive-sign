@@ -1,4 +1,4 @@
-name = "interactive-sign"
+name = "joeyhillerapi"
 main = "src/worker.js"
 compatibility_date = "2024-08-06"
 compatibility_flags = ["nodejs_compat"]

@@ -1,4 +1,4 @@
-import { sendDownlink, getQueueDepth, getCurrentColor } from './handlers/ledHandler.js';
+import { sendDownlink, getQueueDepth, getCurrentColor, parseUplinkPayload, sendCommand } from './handlers/ledHandler.js';
 import { routePartyTracksRequest } from 'partytracks/server';
 
 // Allowed origins for CORS
@@ -108,14 +108,52 @@ export async function handleRequest(request, env, ctx) {
 			return corsResponse(await sendDownlink(env, rNum, gNum, bNum), origin);
 		}
 
-		// GET /led - Get current color
+		// GET /led - Get current device state from last uplink
 		if (method === 'GET' && pathname === '/led') {
-			return corsResponse(await getCurrentColor(env), origin);
+			const id = env.TRACK_REGISTRY.idFromName('busylight-state');
+			const stub = env.TRACK_REGISTRY.get(id);
+			const stateResponse = await stub.fetch(new Request('https://internal/busylight-state'));
+
+			if (!stateResponse.ok) {
+				return corsResponse(jsonResponse({ color: null, message: 'No uplink received yet' }), origin);
+			}
+
+			const deviceState = await stateResponse.json();
+
+			// Also get queue depth
+			const queueResult = await getQueueDepth(env);
+			const queueData = await queueResult.json();
+
+			return corsResponse(jsonResponse({
+				...deviceState,
+				queue: queueData,
+			}), origin);
 		}
 
 		// GET /queue - Get ChirpStack queue depth
 		if (method === 'GET' && pathname === '/queue') {
 			return corsResponse(await getQueueDepth(env), origin);
+		}
+
+		// POST /led/command - Send device command (admin only)
+		if (method === 'POST' && pathname === '/led/command') {
+			// Authenticate admin operations
+			const publisherSecret = request.headers.get('X-Publisher-Secret');
+			const expectedSecret = env.PI_PUBLISHER_SECRET;
+
+			if (expectedSecret && publisherSecret !== expectedSecret) {
+				return corsResponse(jsonResponse({ error: 'Unauthorized' }, 401), origin);
+			}
+
+			const body = await request.json();
+			const { command, param } = body;
+
+			if (command === undefined || param === undefined) {
+				return corsResponse(jsonResponse({ error: 'Missing command or param' }, 400), origin);
+			}
+
+			const result = await sendCommand(env, Number(command), Number(param));
+			return corsResponse(jsonResponse(result), origin);
 		}
 
 		// POST /uplink - Webhook from ChirpStack for uplink/ACK events
@@ -130,19 +168,35 @@ export async function handleRequest(request, env, ctx) {
 			}
 
 			const payload = await request.json();
-			console.log('Uplink received:', JSON.stringify(payload, null, 2));
-
 			const eventType = payload.type || 'unknown';
 			const deviceEUI = payload.deviceInfo?.devEui || 'unknown';
-			const fCnt = payload.fCnt || payload.txInfo?.fCnt || 'unknown';
 
-			console.log(`Event: ${eventType}, DevEUI: ${deviceEUI}, FCnt: ${fCnt}`);
+			console.log(`Uplink event: ${eventType}, DevEUI: ${deviceEUI}`);
 
-			if (payload.confirmed || payload.acknowledged) {
-				console.log('Downlink confirmed/acknowledged!');
+			// Parse telemetry from the data field (base64 encoded)
+			let deviceState = null;
+			if (payload.data) {
+				deviceState = parseUplinkPayload(payload.data);
+				if (deviceState.error) {
+					console.log('Uplink parse note:', deviceState.error, deviceState.length);
+				} else {
+					console.log('Device state:', JSON.stringify(deviceState));
+
+					// Store in Durable Object
+					const id = env.TRACK_REGISTRY.idFromName('busylight-state');
+					const stub = env.TRACK_REGISTRY.get(id);
+					await stub.fetch(new Request('https://internal/busylight-state', {
+						method: 'POST',
+						body: JSON.stringify(deviceState),
+					}));
+				}
 			}
 
-			return jsonResponse({ received: true, eventType });
+			return jsonResponse({
+				received: true,
+				eventType,
+				deviceState: deviceState?.error ? null : deviceState,
+			});
 		}
 
 		// Not found

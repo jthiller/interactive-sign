@@ -1,4 +1,4 @@
-import { sendDownlink, getQueueDepth, getCurrentColor, parseUplinkPayload, sendCommand } from './handlers/ledHandler.js';
+import { sendDownlink, getQueueDepth, parseUplinkPayload, sendCommand } from './handlers/ledHandler.js';
 import { routePartyTracksRequest } from 'partytracks/server';
 
 // Allowed origins for CORS
@@ -137,11 +137,11 @@ export async function handleRequest(request, env, ctx) {
 
 		// POST /led/command - Send device command (admin only)
 		if (method === 'POST' && pathname === '/led/command') {
-			// Authenticate admin operations
+			// Authenticate admin operations (fail-closed: require secret to be configured)
 			const publisherSecret = request.headers.get('X-Publisher-Secret');
 			const expectedSecret = env.PI_PUBLISHER_SECRET;
 
-			if (expectedSecret && publisherSecret !== expectedSecret) {
+			if (!expectedSecret || publisherSecret !== expectedSecret) {
 				return corsResponse(jsonResponse({ error: 'Unauthorized' }, 401), origin);
 			}
 
@@ -152,7 +152,23 @@ export async function handleRequest(request, env, ctx) {
 				return corsResponse(jsonResponse({ error: 'Missing command or param' }, 400), origin);
 			}
 
-			const result = await sendCommand(env, Number(command), Number(param));
+			// Validate command and param are valid bytes (0-255)
+			const commandNum = Number(command);
+			const paramNum = Number(param);
+
+			if (!Number.isInteger(commandNum) || commandNum < 0 || commandNum > 255 ||
+			    !Number.isInteger(paramNum) || paramNum < 0 || paramNum > 255) {
+				return corsResponse(jsonResponse({ error: 'command and param must be integers 0-255' }, 400), origin);
+			}
+
+			const result = await sendCommand(env, commandNum, paramNum);
+
+			// Return appropriate status code based on result
+			if (result.error) {
+				const status = result.status || 500;
+				return corsResponse(jsonResponse(result, status), origin);
+			}
+
 			return corsResponse(jsonResponse(result), origin);
 		}
 

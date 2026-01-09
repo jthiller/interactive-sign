@@ -3,7 +3,12 @@
  * Returns device status including current color, signal quality, and firmware info
  */
 export function parseUplinkPayload(base64Data) {
-	const bytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+	let bytes;
+	try {
+		bytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+	} catch (e) {
+		return { error: 'Invalid base64 payload', details: e.message };
+	}
 
 	if (bytes.length !== 24) {
 		return { error: 'Invalid payload length', length: bytes.length };
@@ -56,8 +61,16 @@ export async function sendCommand(env, commandByte, paramByte) {
 	const deviceId = env.CHIRPSTACK_BUSYLIGHT_DEVICE_ID;
 	const apiToken = env.CHIRPSTACK_API;
 
+	if (!apiUrl) {
+		return { error: 'CHIRPSTACK_API_URL not configured', status: 500 };
+	}
+
+	if (!deviceId) {
+		return { error: 'CHIRPSTACK_BUSYLIGHT_DEVICE_ID not configured', status: 500 };
+	}
+
 	if (!apiToken) {
-		return { error: 'CHIRPSTACK_API secret not configured' };
+		return { error: 'CHIRPSTACK_API secret not configured', status: 500 };
 	}
 
 	const payloadBytes = new Uint8Array([commandByte, paramByte]);

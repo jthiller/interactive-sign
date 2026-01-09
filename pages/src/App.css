@@ -151,37 +151,46 @@ body {
 .site-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: var(--toolbar-bg);
   border-radius: var(--toolbar-radius);
 }
 
+.site-header__name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  padding-right: var(--spacing-xs);
+  border-right: 1px solid var(--color-border);
+  margin-right: var(--spacing-xs);
+}
+
+.site-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 3px;
+  border-radius: var(--radius-full);
+}
+
 .site-header__tab {
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: 6px 12px;
   border: none;
   background: transparent;
   font-size: var(--font-size-sm);
   font-weight: 500;
   color: var(--color-text-muted);
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   transition: background var(--transition-fast), color var(--transition-fast);
 }
 
 .site-header__tab:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: var(--color-surface);
   color: var(--color-text);
-}
-
-.site-header__tab--active {
-  color: var(--color-text);
-}
-
-.site-header__divider {
-  color: var(--color-text-subtle);
-  font-size: var(--font-size-sm);
-  user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* ============================================
@@ -549,18 +558,22 @@ body {
 
 .bio-panel__content {
   flex: 1;
-  padding: 100px 50px 100px 50px;
+  padding: 40px 50px 100px 50px;
   max-width: 600px;
 }
 
 .bio-panel__tabs {
-  display: flex;
-  gap: var(--spacing-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 3px;
+  border-radius: var(--radius-full);
   margin-bottom: var(--spacing-xl);
 }
 
 .bio-panel__tab {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 8px 16px;
   border: none;
   background: transparent;
   font-size: var(--font-size-sm);
@@ -572,13 +585,13 @@ body {
 }
 
 .bio-panel__tab:hover {
-  background: rgba(0, 0, 0, 0.06);
   color: var(--color-text);
 }
 
 .bio-panel__tab--active {
-  background: rgba(0, 0, 0, 0.1);
+  background: var(--color-surface);
   color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .bio-panel__close {
@@ -744,6 +757,21 @@ body {
 
   .site-header {
     padding: var(--spacing-xs) var(--spacing-sm);
+    gap: var(--spacing-xs);
+  }
+
+  .site-header__name {
+    padding-right: var(--spacing-xs);
+    margin-right: 0;
+  }
+
+  .site-header__nav {
+    padding: 2px;
+  }
+
+  .site-header__tab {
+    padding: 5px 10px;
+    font-size: var(--font-size-xs);
   }
 
   /* On mobile, toolbar is inline with content flow, top-only blur perimeter */
@@ -823,7 +851,7 @@ body {
   }
 
   .bio-panel__content {
-    padding: 80px 24px 200px 24px;
+    padding: 40px 24px 200px 24px;
   }
 
   .bio-panel__content h1 {

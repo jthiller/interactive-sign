@@ -5,17 +5,19 @@
 export default function StartStreamButton({ onClick }) {
   return (
     <div className="start-stream">
-      <button className="start-stream__button" onClick={onClick}>
-        <svg
-          className="start-stream__icon"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          width="32"
-          height="32"
-        >
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      </button>
+      <div className="start-stream__button-wrapper">
+        <button className="start-stream__button" onClick={onClick}>
+          <svg
+            className="start-stream__icon"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            width="32"
+            height="32"
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+      </div>
       <p className="start-stream__text">
         Video stream paused to save battery.
         <br />

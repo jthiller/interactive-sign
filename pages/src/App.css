@@ -32,10 +32,10 @@
   --transition-slow: 0.4s ease-out;
 
   /* Floating toolbar */
-  --toolbar-margin: 24px;
+  --toolbar-margin: 16px;
   --toolbar-padding: 16px;
-  --toolbar-stroke: 8px;
-  --toolbar-stroke-color: rgba(0, 0, 0, 0.1);
+  --toolbar-blur-size: 8px;
+  --toolbar-blur-bg: rgba(0, 0, 0, 0.1);
   --toolbar-bg: rgba(255, 255, 255, 0.95);
   --toolbar-radius: 20px;
 
@@ -108,22 +108,44 @@ body {
 }
 
 /* ============================================
-   Floating Header
+   Blur Frame - Frosted Glass Perimeter
    ============================================ */
-.site-header {
+.blur-frame {
+  background: var(--toolbar-blur-bg);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  padding: var(--toolbar-blur-size);
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.05);
+}
+
+.blur-frame--header {
   position: fixed;
   top: var(--toolbar-margin);
   left: var(--toolbar-margin);
   z-index: 100;
+  border-radius: calc(var(--toolbar-radius) + var(--toolbar-blur-size));
+}
+
+.blur-frame--toolbar {
+  position: fixed;
+  bottom: var(--toolbar-margin);
+  left: var(--toolbar-margin);
+  width: calc(100% - 2 * var(--toolbar-margin));
+  max-width: 768px;
+  z-index: 100;
+  border-radius: calc(var(--toolbar-radius) + var(--toolbar-blur-size));
+}
+
+/* ============================================
+   Floating Header
+   ============================================ */
+.site-header {
   display: flex;
   align-items: baseline;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--toolbar-bg);
   border-radius: var(--toolbar-radius);
-  box-shadow: 0 0 0 var(--toolbar-stroke) var(--toolbar-stroke-color);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: none;
   cursor: pointer;
   font-family: inherit;
@@ -148,17 +170,9 @@ body {
    Floating Bottom Toolbar
    ============================================ */
 .hsb-frame__toolbar {
-  position: fixed;
-  bottom: var(--toolbar-margin);
-  left: var(--toolbar-margin);
-  right: var(--toolbar-margin);
-  z-index: 100;
   padding: var(--toolbar-padding);
   background: var(--toolbar-bg);
   border-radius: var(--toolbar-radius);
-  box-shadow: 0 0 0 var(--toolbar-stroke) var(--toolbar-stroke-color);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   display: flex;
   gap: var(--spacing-md);
 }
@@ -419,6 +433,15 @@ body {
   gap: var(--spacing-md);
 }
 
+.start-stream__button-wrapper {
+  background: var(--toolbar-blur-bg);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  padding: var(--toolbar-blur-size);
+  border-radius: 50%;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.05);
+}
+
 .start-stream__button {
   width: 80px;
   height: 80px;
@@ -430,9 +453,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 var(--toolbar-stroke) var(--toolbar-stroke-color);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   transition: transform var(--transition-fast);
 }
 
@@ -645,24 +665,33 @@ body {
     min-height: 0;
   }
 
-  .site-header {
+  .blur-frame--header {
     top: 16px;
     left: 16px;
-    right: auto;
+  }
+
+  .site-header {
     padding: var(--spacing-xs) var(--spacing-sm);
   }
 
-  .hsb-frame__toolbar {
+  /* On mobile, toolbar is inline with content flow, top-only blur perimeter */
+  .blur-frame--toolbar {
+    
     position: relative;
     bottom: auto;
     left: auto;
     right: auto;
+    padding: 0;
+    background: none;
+    border-radius: calc(var(--radius-lg) + var(--toolbar-blur-size)) calc(var(--radius-lg) + var(--toolbar-blur-size)) 0 0;
+    margin-top: calc(-1 * var(--radius-lg));
+  }
+
+  .hsb-frame__toolbar {
     flex-direction: column;
     gap: var(--spacing-sm);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     padding: var(--spacing-md);
-    margin-top: calc(-1 * var(--radius-lg));
   }
 
   .hsb-frame__info-panel {

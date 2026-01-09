@@ -125,54 +125,56 @@ export default function HSBFrame({ onBioClick, lowPowerMode, onStartStream }) {
       <SiteHeader onNameClick={onBioClick} />
 
       {/* Floating bottom toolbar */}
-      <div className="hsb-frame__toolbar">
-        {/* Left: Info panel */}
-        <div className="hsb-frame__info-panel">
-          <div className="hsb-frame__color-row">
-            <div
-              className="hsb-frame__swatch"
-              style={{ backgroundColor: displayHex }}
-            />
-            <div className="hsb-frame__color-details">
-              <div className="hsb-frame__color-name">{colorName}</div>
-              <div className="hsb-frame__color-hex">{displayHex}</div>
-              <div className="hsb-frame__color-brightness">Brightness: {brightness}%</div>
+      <div className="blur-frame blur-frame--toolbar">
+        <div className="hsb-frame__toolbar">
+          {/* Left: Info panel */}
+          <div className="hsb-frame__info-panel">
+            <div className="hsb-frame__color-row">
+              <div
+                className="hsb-frame__swatch"
+                style={{ backgroundColor: displayHex }}
+              />
+              <div className="hsb-frame__color-details">
+                <div className="hsb-frame__color-name">{colorName}</div>
+                <div className="hsb-frame__color-hex">{displayHex}</div>
+                <div className="hsb-frame__color-brightness">Brightness: {brightness}%</div>
+              </div>
+            </div>
+
+            <button
+              className="hsb-frame__submit"
+              onClick={handleSubmit}
+              disabled={!canSubmit || isSubmitting}
+            >
+              {isSubmitting ? 'Sending...' : 'Set Color'}
+            </button>
+
+            <div className="hsb-frame__status">
+              <QueueStatus
+                queueDepth={queueDepth}
+                remainingTime={remainingTime}
+                isSubmitting={isSubmitting}
+              />
             </div>
           </div>
 
-          <button
-            className="hsb-frame__submit"
-            onClick={handleSubmit}
-            disabled={!canSubmit || isSubmitting}
-          >
-            {isSubmitting ? 'Sending...' : 'Set Color'}
-          </button>
-
-          <div className="hsb-frame__status">
-            <QueueStatus
-              queueDepth={queueDepth}
-              remainingTime={remainingTime}
-              isSubmitting={isSubmitting}
+          {/* Right: Brightness + 2D Color area */}
+          <div className="hsb-frame__color-picker">
+            <BrightnessSlider
+              value={brightness}
+              hue={hue}
+              saturation={saturation}
+              onChange={setBrightness}
+              orientation={isMobile ? 'horizontal' : 'vertical'}
+            />
+            <ColorArea
+              hue={hue}
+              saturation={saturation}
+              brightness={brightness}
+              onHueChange={setHue}
+              onSaturationChange={setSaturation}
             />
           </div>
-        </div>
-
-        {/* Right: Brightness + 2D Color area */}
-        <div className="hsb-frame__color-picker">
-          <BrightnessSlider
-            value={brightness}
-            hue={hue}
-            saturation={saturation}
-            onChange={setBrightness}
-            orientation={isMobile ? 'horizontal' : 'vertical'}
-          />
-          <ColorArea
-            hue={hue}
-            saturation={saturation}
-            brightness={brightness}
-            onHueChange={setHue}
-            onSaturationChange={setSaturation}
-          />
         </div>
       </div>
     </div>

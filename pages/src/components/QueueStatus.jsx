@@ -14,7 +14,7 @@ export default function QueueStatus({ queueDepth, remainingTime, isSubmitting })
   if (queueDepth > 0) {
     return (
       <div className="queue-status waiting">
-        {queueDepth === 1 ? '1 color in queue' : `${queueDepth}+ colors in queue`}
+        {queueDepth === 1 ? '1 color in queue' : `${queueDepth} colors in queue`}
       </div>
     )
   }

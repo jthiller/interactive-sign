@@ -22,6 +22,8 @@ export default function HSBFrame({ onBioClick, lowPowerMode, onStartStream }) {
   const [saturation, setSaturation] = useState(DEFAULT_SATURATION)
   const [brightness, setBrightness] = useState(DEFAULT_BRIGHTNESS)
   const [isVideoConnected, setIsVideoConnected] = useState(false)
+  const [videoStatus, setVideoStatus] = useState('initializing')
+  const [playRequested, setPlayRequested] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [queueDepth, setQueueDepth] = useState(0)
   const [remainingTime, setRemainingTime] = useState(0)
@@ -76,6 +78,9 @@ export default function HSBFrame({ onBioClick, lowPowerMode, onStartStream }) {
 
   const handleConnectionChange = (connected) => {
     setIsVideoConnected(connected)
+    if (connected) {
+      setPlayRequested(false)
+    }
   }
 
   const canSubmit = remainingTime === 0
@@ -113,11 +118,16 @@ export default function HSBFrame({ onBioClick, lowPowerMode, onStartStream }) {
       <div className="hsb-frame__video-area">
         <VideoPlayer
           onConnectionChange={handleConnectionChange}
+          onStatusChange={setVideoStatus}
           lowPowerMode={lowPowerMode}
+          playRequested={playRequested}
         />
 
-        {lowPowerMode && !isVideoConnected && (
-          <StartStreamButton onClick={onStartStream} />
+        {(lowPowerMode || videoStatus === 'paused') && !isVideoConnected && (
+          <StartStreamButton onClick={() => {
+            setPlayRequested(true)
+            onStartStream?.()
+          }} />
         )}
       </div>
 

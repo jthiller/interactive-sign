@@ -9,6 +9,7 @@ export default function VideoPlayer({
   onConnectionChange,
   onStatusChange,
   lowPowerMode = false,
+  playRequested = false,
 }) {
   const videoRef = useRef(null)
   const partyTracksRef = useRef(null)
@@ -163,13 +164,24 @@ export default function VideoPlayer({
     }
   }, [connectToStream, cleanup, lowPowerMode])
 
-  const handleVideoClick = useCallback(() => {
+  const tryPlay = useCallback(() => {
     if (videoRef.current && status === 'paused') {
       videoRef.current.play()
         .then(() => setStatus('connected'))
         .catch(() => {})
     }
   }, [status])
+
+  // Handle external play request (e.g., from StartStreamButton)
+  useEffect(() => {
+    if (playRequested) {
+      tryPlay()
+    }
+  }, [playRequested, tryPlay])
+
+  const handleVideoClick = useCallback(() => {
+    tryPlay()
+  }, [tryPlay])
 
   const showStatic = status !== 'connected'
 

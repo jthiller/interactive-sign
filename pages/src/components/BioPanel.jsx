@@ -23,6 +23,7 @@ export default function BioPanel({ isOpen, onClose }) {
           className="bio-panel__close"
           onClick={onClose}
           aria-label="Close panel"
+          title="Close panel"
         >
           &times;
         </button>

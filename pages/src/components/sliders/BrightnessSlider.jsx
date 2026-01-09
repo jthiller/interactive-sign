@@ -17,7 +17,7 @@ export default function BrightnessSlider({ value, hue = 0, saturation = 100, onC
   })
 
   // Calculate handle position
-  const position = (value / 100) * 100
+  const position = value
 
   // For vertical: 100% at top, 0% at bottom (inverted)
   const handleStyle = isVertical

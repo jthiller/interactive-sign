@@ -424,7 +424,7 @@ body {
 /* Queue status */
 .queue-status {
   font-size: var(--font-size-xs);
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted);
 }
 
 /* ============================================
@@ -432,7 +432,7 @@ body {
    ============================================ */
 .start-stream {
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 5;
@@ -536,7 +536,7 @@ body {
 
 .bio-panel__content {
   flex: 1;
-  padding: 100px 50px 0px 50px;
+  padding: 100px 50px 100px 50px;
   max-width: 600px;
 }
 

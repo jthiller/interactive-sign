@@ -15,7 +15,7 @@ const COLOR_NAMES = [
   { hue: 180, name: 'Cyan' },
   { hue: 195, name: 'Sky Blue' },
   { hue: 210, name: 'Azure' },
-  { hue: 220, name: 'Nīlā Blue' },
+  { hue: 220, name: 'Nila Blue' },
   { hue: 240, name: 'Blue' },
   { hue: 270, name: 'Violet' },
   { hue: 285, name: 'Purple' },

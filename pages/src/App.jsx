@@ -8,7 +8,6 @@ function App() {
 
   const handleStartStream = useCallback(() => {
     setLowPowerMode(false)
-    localStorage.setItem('streamAutoConnect', 'true')
   }, [])
 
   return (

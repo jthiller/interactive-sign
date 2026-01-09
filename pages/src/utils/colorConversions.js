@@ -4,7 +4,7 @@
 
 /**
  * Convert HSB (Hue, Saturation, Brightness) to RGB
- * @param {number} h - Hue (0-360)
+ * @param {number} h - Hue (0-359, where 360 wraps to 0)
  * @param {number} s - Saturation (0-100)
  * @param {number} b - Brightness (0-100)
  * @returns {{r: number, g: number, b: number}} RGB values (0-255)
@@ -18,26 +18,26 @@ export function hsbToRgb(h, s, b) {
   const x = c * (1 - Math.abs((hue % 2) - 1))
   const m = brightness - c
 
-  let r = 0, g = 0, blue = 0
+  let r = 0, g = 0, bl = 0
 
   if (hue >= 0 && hue < 1) {
-    r = c; g = x; blue = 0
+    r = c; g = x; bl = 0
   } else if (hue >= 1 && hue < 2) {
-    r = x; g = c; blue = 0
+    r = x; g = c; bl = 0
   } else if (hue >= 2 && hue < 3) {
-    r = 0; g = c; blue = x
+    r = 0; g = c; bl = x
   } else if (hue >= 3 && hue < 4) {
-    r = 0; g = x; blue = c
+    r = 0; g = x; bl = c
   } else if (hue >= 4 && hue < 5) {
-    r = x; g = 0; blue = c
+    r = x; g = 0; bl = c
   } else {
-    r = c; g = 0; blue = x
+    r = c; g = 0; bl = x
   }
 
   return {
     r: Math.round((r + m) * 255),
     g: Math.round((g + m) * 255),
-    b: Math.round((blue + m) * 255)
+    b: Math.round((bl + m) * 255)
   }
 }
 

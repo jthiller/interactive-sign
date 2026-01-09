@@ -29,7 +29,7 @@ export default function ColorArea({ hue, saturation, brightness = 100, onHueChan
   const handlePointerDown = useCallback((e) => {
     e.preventDefault()
     isDragging.current = true
-    areaRef.current.setPointerCapture(e.pointerId)
+    areaRef.current?.setPointerCapture(e.pointerId)
     updateFromPosition(e.clientX, e.clientY)
   }, [updateFromPosition])
 
@@ -41,7 +41,7 @@ export default function ColorArea({ hue, saturation, brightness = 100, onHueChan
 
   const handlePointerUp = useCallback((e) => {
     isDragging.current = false
-    areaRef.current.releasePointerCapture(e.pointerId)
+    areaRef.current?.releasePointerCapture(e.pointerId)
   }, [])
 
   // Handle position (percentage) - let CSS overflow:hidden clip at edges
@@ -85,8 +85,8 @@ export default function ColorArea({ hue, saturation, brightness = 100, onHueChan
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      role="slider"
-      aria-label="Color picker"
+      role="application"
+      aria-label="Two-dimensional color picker: horizontal axis controls hue, vertical axis controls saturation"
       aria-valuetext={`Hue ${Math.round(hue)}°, Saturation ${Math.round(saturation)}%`}
       tabIndex={0}
       onKeyDown={handleKeyDown}

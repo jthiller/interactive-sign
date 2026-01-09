@@ -6,7 +6,7 @@ import { useCallback, useRef } from 'react'
  *
  * @param {Object} options
  * @param {'horizontal' | 'vertical'} options.orientation - Slider orientation
- * @param {function} options.onChange - Callback with value 0-1
+ * @param {function} options.onChange - Callback with value in [min, max] range (default 0-100)
  * @param {number} options.min - Minimum value (default 0)
  * @param {number} options.max - Maximum value (default 100)
  * @returns {Object} Event handlers and ref
@@ -89,7 +89,7 @@ export function useSliderDrag({ orientation = 'horizontal', onChange, min = 0, m
   // Keyboard support for accessibility
   const handleKeyDown = useCallback((e, currentValue) => {
     const step = (max - min) / 100 // 1% steps
-    let newValue = currentValue
+    let newValue
 
     switch (e.key) {
       case 'ArrowRight':

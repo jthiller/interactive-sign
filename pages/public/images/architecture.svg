@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280" fill="none">
+  <style>
+    .box { fill: #f8f8f8; stroke: #28292b; stroke-width: 1.5; rx: 8; }
+    .label { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 600; fill: #28292b; }
+    .sublabel { font-family: system-ui, -apple-system, sans-serif; font-size: 9px; fill: #75777d; }
+    .arrow { stroke: #28292b; stroke-width: 1.5; fill: none; }
+    .arrowhead { fill: #28292b; }
+  </style>
+
+  <!-- Row 1 -->
+  <!-- Raspberry Pi -->
+  <rect class="box" x="20" y="30" width="140" height="60"/>
+  <text class="label" x="90" y="55" text-anchor="middle">Raspberry Pi</text>
+  <text class="sublabel" x="90" y="70" text-anchor="middle">+ Webcam</text>
+
+  <!-- Arrow: Pi to Cloudflare -->
+  <line class="arrow" x1="160" y1="60" x2="210" y2="60"/>
+  <polygon class="arrowhead" points="210,55 220,60 210,65"/>
+
+  <!-- Cloudflare -->
+  <rect class="box" x="220" y="30" width="160" height="60"/>
+  <text class="label" x="300" y="55" text-anchor="middle">Cloudflare</text>
+  <text class="sublabel" x="300" y="70" text-anchor="middle">Workers + Realtime SFU</text>
+
+  <!-- Arrow: Cloudflare to Browser -->
+  <line class="arrow" x1="380" y1="60" x2="430" y2="60"/>
+  <polygon class="arrowhead" points="430,55 440,60 430,65"/>
+
+  <!-- Browser -->
+  <rect class="box" x="440" y="30" width="140" height="60"/>
+  <text class="label" x="510" y="55" text-anchor="middle">Your Browser</text>
+  <text class="sublabel" x="510" y="70" text-anchor="middle">React + WebRTC</text>
+
+  <!-- Arrow: Cloudflare down to MeteoScientific -->
+  <path class="arrow" d="M 300 90 L 300 125 L 90 125 L 90 155"/>
+  <polygon class="arrowhead" points="85,155 90,165 95,155"/>
+
+  <!-- Row 2 -->
+  <!-- MeteoScientific -->
+  <rect class="box" x="20" y="165" width="140" height="60"/>
+  <text class="label" x="90" y="190" text-anchor="middle">MeteoScientific</text>
+  <text class="sublabel" x="90" y="205" text-anchor="middle">(ChirpStack)</text>
+
+  <!-- Arrow: MeteoScientific to Helium -->
+  <line class="arrow" x1="160" y1="195" x2="210" y2="195"/>
+  <polygon class="arrowhead" points="210,190 220,195 210,200"/>
+
+  <!-- Helium Network -->
+  <rect class="box" x="220" y="165" width="160" height="60"/>
+  <text class="label" x="300" y="190" text-anchor="middle">Helium Network</text>
+  <text class="sublabel" x="300" y="205" text-anchor="middle">LoRaWAN</text>
+
+  <!-- Arrow: Helium to LED -->
+  <line class="arrow" x1="380" y1="195" x2="430" y2="195"/>
+  <polygon class="arrowhead" points="430,190 440,195 430,200"/>
+
+  <!-- LED Light -->
+  <rect class="box" x="440" y="165" width="140" height="60"/>
+  <text class="label" x="510" y="190" text-anchor="middle">LED Light</text>
+  <text class="sublabel" x="510" y="205" text-anchor="middle">Busylight</text>
+</svg>

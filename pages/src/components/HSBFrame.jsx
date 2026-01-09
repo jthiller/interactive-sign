@@ -17,7 +17,7 @@ const DEFAULT_BRIGHTNESS = 45
 /**
  * Main HSB color picker with fullscreen video and floating toolbar
  */
-export default function HSBFrame({ onBioClick, lowPowerMode, onStartStream }) {
+export default function HSBFrame({ activeTab, onTabClick, lowPowerMode, onStartStream }) {
   const [hue, setHue] = useState(DEFAULT_HUE)
   const [saturation, setSaturation] = useState(DEFAULT_SATURATION)
   const [brightness, setBrightness] = useState(DEFAULT_BRIGHTNESS)
@@ -132,7 +132,7 @@ export default function HSBFrame({ onBioClick, lowPowerMode, onStartStream }) {
       </div>
 
       {/* Floating header */}
-      <SiteHeader onNameClick={onBioClick} />
+      <SiteHeader activeTab={activeTab} onTabClick={onTabClick} />
 
       {/* Floating bottom toolbar */}
       <div className="blur-frame blur-frame--toolbar">

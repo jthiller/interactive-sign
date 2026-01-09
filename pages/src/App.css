@@ -107,6 +107,15 @@ body {
   opacity: 1;
 }
 
+/* TV static background when video not connected */
+.tv-static {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* ============================================
    Blur Frame - Frosted Glass Perimeter
    ============================================ */

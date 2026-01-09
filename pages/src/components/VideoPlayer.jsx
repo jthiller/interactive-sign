@@ -3,6 +3,7 @@ import 'webrtc-adapter'
 import { PartyTracks } from 'partytracks/client'
 import { of } from 'rxjs'
 import { API_BASE } from '../config'
+import TVStatic from './TVStatic'
 
 export default function VideoPlayer({
   onConnectionChange,
@@ -170,8 +171,11 @@ export default function VideoPlayer({
     }
   }, [status])
 
+  const showStatic = status !== 'connected'
+
   return (
     <div className="video-container">
+      {showStatic && <TVStatic />}
       <video
         ref={videoRef}
         autoPlay

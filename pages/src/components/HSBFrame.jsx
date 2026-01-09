@@ -6,13 +6,13 @@ import SiteHeader from './SiteHeader'
 import StartStreamButton from './StartStreamButton'
 import QueueStatus from './QueueStatus'
 import { hsbToRgb, rgbToHex } from '../utils/colorConversions'
-import { getColorName } from '../utils/colorNames'
+import { useColorName } from '../hooks/useColorName'
 import { API_BASE } from '../config'
 
-// Default color: blue (#0055FF) - H=220, S=100, B=50
-const DEFAULT_HUE = 220
-const DEFAULT_SATURATION = 100
-const DEFAULT_BRIGHTNESS = 50
+// Default color: purple (#A403FF) - H=278, S=99, B=45
+const DEFAULT_HUE = 278
+const DEFAULT_SATURATION = 99
+const DEFAULT_BRIGHTNESS = 45
 
 /**
  * Main HSB color picker with fullscreen video and floating toolbar
@@ -40,7 +40,7 @@ export default function HSBFrame({ onBioClick, lowPowerMode, onStartStream }) {
   // Display color (always at 100% brightness for swatch/name)
   const displayRgb = hsbToRgb(hue, saturation, 100)
   const displayHex = rgbToHex(displayRgb.r, displayRgb.g, displayRgb.b)
-  const colorName = getColorName(hue, saturation, 100)
+  const colorName = useColorName(displayHex)
 
   // Actual color with brightness for API submission
   const rgb = hsbToRgb(hue, saturation, brightness)

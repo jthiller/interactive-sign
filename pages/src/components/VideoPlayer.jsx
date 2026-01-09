@@ -3,82 +3,21 @@ import 'webrtc-adapter'
 import { PartyTracks } from 'partytracks/client'
 import { of } from 'rxjs'
 import { API_BASE } from '../config'
+import TVStatic from './TVStatic'
 
-// Brightness threshold (0-255) - below this is "dark"
-const BRIGHTNESS_THRESHOLD = 100
-// How often to sample brightness (ms)
-const SAMPLE_INTERVAL = 2000
-// Size of the sample canvas (small for performance)
-const SAMPLE_SIZE = 32
-
-export default function VideoPlayer({ onConnectionChange, onStatusChange, onThemeChange }) {
+export default function VideoPlayer({
+  onConnectionChange,
+  onStatusChange,
+  lowPowerMode = false,
+  playRequested = false,
+}) {
   const videoRef = useRef(null)
-  const canvasRef = useRef(null)
   const partyTracksRef = useRef(null)
   const pullSubscriptionRef = useRef(null)
   const sessionSubscriptionRef = useRef(null)
-  const brightnessIntervalRef = useRef(null)
   const isConnectingRef = useRef(false)
-  const [status, setStatus] = useState('initializing')
+  const [status, setStatus] = useState(lowPowerMode ? 'idle' : 'initializing')
   const [error, setError] = useState(null)
-
-  // Sample brightness from the left side of the video
-  const sampleBrightness = useCallback(() => {
-    const video = videoRef.current
-    const canvas = canvasRef.current
-    if (!video || !canvas || video.readyState < 2) return
-
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) return
-
-    // Draw left third of video to canvas
-    const sourceWidth = video.videoWidth / 3
-    ctx.drawImage(
-      video,
-      0, 0, sourceWidth, video.videoHeight,  // source (left third)
-      0, 0, SAMPLE_SIZE, SAMPLE_SIZE          // destination (small canvas)
-    )
-
-    // Get pixel data
-    const imageData = ctx.getImageData(0, 0, SAMPLE_SIZE, SAMPLE_SIZE)
-    const pixels = imageData.data
-
-    // Calculate average luminance
-    let totalLuminance = 0
-    const pixelCount = pixels.length / 4
-
-    for (let i = 0; i < pixels.length; i += 4) {
-      const r = pixels[i]
-      const g = pixels[i + 1]
-      const b = pixels[i + 2]
-      // Standard luminance formula
-      totalLuminance += 0.299 * r + 0.587 * g + 0.114 * b
-    }
-
-    const avgBrightness = totalLuminance / pixelCount
-    const isDark = avgBrightness < BRIGHTNESS_THRESHOLD
-
-    if (onThemeChange) {
-      onThemeChange(isDark ? 'dark' : 'light')
-    }
-  }, [onThemeChange])
-
-  // Start/stop brightness sampling based on connection status
-  useEffect(() => {
-    if (status === 'connected') {
-      // Initial sample after a short delay
-      const initialTimeout = setTimeout(sampleBrightness, 500)
-      // Then sample periodically
-      brightnessIntervalRef.current = setInterval(sampleBrightness, SAMPLE_INTERVAL)
-
-      return () => {
-        clearTimeout(initialTimeout)
-        if (brightnessIntervalRef.current) {
-          clearInterval(brightnessIntervalRef.current)
-        }
-      }
-    }
-  }, [status, sampleBrightness])
 
   // Notify parent of connection status
   useEffect(() => {
@@ -98,10 +37,6 @@ export default function VideoPlayer({ onConnectionChange, onStatusChange, onThem
     if (sessionSubscriptionRef.current) {
       sessionSubscriptionRef.current.unsubscribe()
       sessionSubscriptionRef.current = null
-    }
-    if (brightnessIntervalRef.current) {
-      clearInterval(brightnessIntervalRef.current)
-      brightnessIntervalRef.current = null
     }
     isConnectingRef.current = false
   }, [])
@@ -184,7 +119,19 @@ export default function VideoPlayer({ onConnectionChange, onStatusChange, onThem
     }
   }, [])
 
+  // Handle low power mode changes
   useEffect(() => {
+    if (lowPowerMode) {
+      // Reset to idle when entering low power mode
+      cleanup()
+      setStatus('idle')
+    }
+  }, [lowPowerMode, cleanup])
+
+  useEffect(() => {
+    // Don't auto-connect in low power mode
+    if (lowPowerMode) return
+
     let pollInterval
     let mounted = true
 
@@ -215,9 +162,9 @@ export default function VideoPlayer({ onConnectionChange, onStatusChange, onThem
       clearInterval(pollInterval)
       cleanup()
     }
-  }, [connectToStream, cleanup])
+  }, [connectToStream, cleanup, lowPowerMode])
 
-  const handleVideoClick = useCallback(() => {
+  const tryPlay = useCallback(() => {
     if (videoRef.current && status === 'paused') {
       videoRef.current.play()
         .then(() => setStatus('connected'))
@@ -225,8 +172,22 @@ export default function VideoPlayer({ onConnectionChange, onStatusChange, onThem
     }
   }, [status])
 
+  // Handle external play request (e.g., from StartStreamButton)
+  useEffect(() => {
+    if (playRequested) {
+      tryPlay()
+    }
+  }, [playRequested, tryPlay])
+
+  const handleVideoClick = useCallback(() => {
+    tryPlay()
+  }, [tryPlay])
+
+  const showStatic = status !== 'connected'
+
   return (
     <div className="video-container">
+      {showStatic && <TVStatic />}
       <video
         ref={videoRef}
         autoPlay
@@ -235,13 +196,6 @@ export default function VideoPlayer({ onConnectionChange, onStatusChange, onThem
         webkit-playsinline="true"
         onClick={handleVideoClick}
         className={`video-player ${status === 'connected' ? 'connected' : ''}`}
-      />
-      {/* Hidden canvas for brightness sampling */}
-      <canvas
-        ref={canvasRef}
-        width={SAMPLE_SIZE}
-        height={SAMPLE_SIZE}
-        style={{ display: 'none' }}
       />
     </div>
   )

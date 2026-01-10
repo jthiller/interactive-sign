@@ -2,7 +2,7 @@
 # Copy this file to start.sh and fill in your values
 # start.sh is gitignored to protect your secrets
 
-export WORKER_URL=https://interactive-sign.jthiller.workers.dev
+export WORKER_URL=https://api.joeyhiller.com
 export CLOUDFLARE_CALLS_APP_ID=your-cloudflare-calls-app-id
 export CLOUDFLARE_CALLS_API_TOKEN=your-cloudflare-calls-api-token
 export PI_PUBLISHER_SECRET=your-publisher-secret  # Must match PI_PUBLISHER_SECRET in wrangler secrets

@@ -92,6 +92,23 @@ export class TrackRegistry {
       return this.json({ success: true });
     }
 
+    // POST /busylight-state - Store device telemetry from uplink
+    if (request.method === 'POST' && url.pathname === '/busylight-state') {
+      const state = await request.json();
+      await this.state.storage.put('busylightState', state);
+      console.log(`Busylight state stored: ${state.color?.hex}`);
+      return this.json({ success: true });
+    }
+
+    // GET /busylight-state - Get current device state
+    if (request.method === 'GET' && url.pathname === '/busylight-state') {
+      const state = await this.state.storage.get('busylightState');
+      if (!state) {
+        return this.json({ error: 'No state available' }, 404);
+      }
+      return this.json(state);
+    }
+
     return new Response('Not found', { status: 404 });
   }
 

@@ -165,18 +165,48 @@ Body: {
 
 **CRITICAL: Byte order is R, B, G (not RGB)**
 
+Device uses LoRaWAN MAC 1.0.3, FPort 15 for all messages.
+
 ```javascript
-// Color downlink (5 bytes)
-[Red, Blue, Green, OnDuration, OffDuration]
-
-// Device command (2 bytes)
-[CommandByte, ParamByte]
-
-// Commands:
-// 0x04, N = Set uplink interval to N minutes
-// 0x05, 0 = Request immediate uplink
-// 0x06, 1 = Enable auto-uplink after downlinks
+// Color downlink (5-6 bytes)
+[Red, Blue, Green, OnDuration, OffDuration, RequestUplink?]
+// OnDuration/OffDuration: value is 1/10 seconds (255 = 25.5s)
+// OffDuration=0 means steady light (no flashing)
+// Optional byte[5]=0x01 triggers immediate uplink response
 ```
+
+### Device Commands (2 bytes)
+
+| Command | Param | Function |
+|---------|-------|----------|
+| `0x01` | `0x00` | Enable ADR (default) |
+| `0x02` | `0x00` | Disable ADR |
+| `0x03` | N | Set ADR watchdog (N × 10 min, default 30 = 5 hours) |
+| `0x04` | N | Set uplink interval to N minutes (default 30) |
+| `0x05` | `0x00` | Request immediate uplink (one-time) |
+| `0x06` | `0x00` | Disable auto-uplink after downlinks (default) |
+| `0x06` | `0x01` | Enable auto-uplink after every downlink |
+| `0xAA` | `0x00` | Factory reset (restores all defaults) |
+| `0xBB` | `0x00` | Enter boot mode for firmware update |
+
+**Warning:** Device reset/restart restores ALL default settings (uplink interval, ADR, watchdogs).
+
+### Watchdog Timers
+
+Two independent watchdogs can restart the device:
+1. **ADR watchdog** - Restarts if no ADR downlink response for N × 10 min (default 30 = 5 hours)
+2. **General watchdog** - Restarts if no downlink received for 240 uplinks (default ~5 days at 30 min interval)
+
+Both counters reset when the device receives any downlink.
+
+### Power Consumption
+
+| State | Current | Power |
+|-------|---------|-------|
+| Waiting for join | 9.4 mA | 0.05 W |
+| Joined (idle) | 16.5 mA | 0.08 W |
+| LED on (single color 100%) | ~55-59 mA | ~0.28-0.30 W |
+| LED on (white 100%) | 113 mA | 0.57 W |
 
 ### Uplink Telemetry (24 bytes)
 ```javascript

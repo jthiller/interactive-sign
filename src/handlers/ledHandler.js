@@ -234,18 +234,6 @@ async function getQueueDepthInternal(env) {
 	}
 }
 
-/**
- * Get the current/last set color (stored in KV if available)
- */
-export async function getCurrentColor(env) {
-	// For now, just return queue status since we don't have KV set up yet
-	const queue = await getQueueDepthInternal(env);
-	return jsonResponse({
-		color: null, // Would come from KV storage
-		queue,
-	});
-}
-
 function rgbToHex(r, g, b) {
 	return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
 }

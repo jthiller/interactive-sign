@@ -5,8 +5,7 @@ import { routePartyTracksRequest } from 'partytracks/server';
 const ALLOWED_ORIGINS = [
 	'https://joeyhiller.com',
 	'https://www.joeyhiller.com',
-	'https://interactive-sign.jthiller.workers.dev',
-	'https://interactive-sign-pages.pages.dev',
+	'https://joeyhillercom.pages.dev',
 	'http://localhost:5173', // Vite dev server
 	'http://localhost:4173', // Vite preview
 ];

@@ -105,8 +105,9 @@ export async function sendCommand(env, commandByte, paramByte) {
 /**
  * Send a color downlink to the Busylight
  * Payload format: [R, B, G, onDuration, offDuration] (note: R, B, G order per device spec)
+ * @param {boolean} confirmed - If true, device will ACK receipt (uses more airtime but more reliable)
  */
-export async function sendDownlink(env, red, green, blue) {
+export async function sendDownlink(env, red, green, blue, confirmed = false) {
 	const apiUrl = env.CHIRPSTACK_API_URL;
 	const deviceId = env.CHIRPSTACK_BUSYLIGHT_DEVICE_ID;
 	const apiToken = env.CHIRPSTACK_API;
@@ -133,11 +134,11 @@ export async function sendDownlink(env, red, green, blue) {
 
 		const base64Payload = btoa(String.fromCharCode(...payloadBytes));
 
-		console.log(`Sending downlink: RGB(${r}, ${g}, ${b}) -> payload: ${base64Payload}`);
+		console.log(`Sending downlink: RGB(${r}, ${g}, ${b}) confirmed=${confirmed} -> payload: ${base64Payload}`);
 
 		const downlinkPayload = {
 			queueItem: {
-				confirmed: false,  // Unconfirmed - no ACK needed, no retries
+				confirmed,  // If true, device will ACK and retry on failure
 				data: base64Payload,
 				fPort: 15,
 			},
@@ -173,6 +174,7 @@ export async function sendDownlink(env, red, green, blue) {
 			success: true,
 			color: { r, g, b },
 			hex: rgbToHex(r, g, b),
+			confirmed,
 			payload: base64Payload,
 			queueDepth: queueResponse.queueDepth,
 			downlinkId: result.id,

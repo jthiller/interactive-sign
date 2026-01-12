@@ -104,7 +104,15 @@ export async function handleRequest(request, env, ctx) {
 				return corsResponse(jsonResponse({ error: 'Invalid color values' }, 400), origin);
 			}
 
-			return corsResponse(await sendDownlink(env, rNum, gNum, bNum), origin);
+			// Get downlink counter to determine if this should be confirmed
+			// Every 5th downlink is confirmed for reliability feedback
+			const counterId = env.TRACK_REGISTRY.idFromName('downlink-counter');
+			const counterStub = env.TRACK_REGISTRY.get(counterId);
+			const counterResponse = await counterStub.fetch(new Request('https://internal/downlink-counter', { method: 'POST' }));
+			const { count } = await counterResponse.json();
+			const confirmed = count % 5 === 0;
+
+			return corsResponse(await sendDownlink(env, rNum, gNum, bNum, confirmed), origin);
 		}
 
 		// GET /led - Get current device state from last uplink
@@ -186,10 +194,24 @@ export async function handleRequest(request, env, ctx) {
 			const eventType = payload.type || 'unknown';
 			const deviceEUI = payload.deviceInfo?.devEui || 'unknown';
 
-			console.log(`Uplink event: ${eventType}, DevEUI: ${deviceEUI}`);
+			console.log(`Webhook event: ${eventType}, DevEUI: ${deviceEUI}`);
+
+			// Handle join events - configure device after it joins the network
+			if (eventType === 'join') {
+				console.log('Device joined network, will configure on first uplink');
+				// Mark that we need to configure this device
+				const id = env.TRACK_REGISTRY.idFromName('busylight-state');
+				const stub = env.TRACK_REGISTRY.get(id);
+				await stub.fetch(new Request('https://internal/busylight-needs-config', {
+					method: 'POST',
+					body: JSON.stringify({ needsConfig: true, joinedAt: Date.now() }),
+				}));
+				return jsonResponse({ received: true, eventType, action: 'marked-for-config' });
+			}
 
 			// Parse telemetry from the data field (base64 encoded)
 			let deviceState = null;
+			let configSent = false;
 			if (payload.data) {
 				deviceState = parseUplinkPayload(payload.data);
 				if (deviceState.error) {
@@ -204,6 +226,24 @@ export async function handleRequest(request, env, ctx) {
 						method: 'POST',
 						body: JSON.stringify(deviceState),
 					}));
+
+					// Check if device needs configuration after join
+					const configCheck = await stub.fetch(new Request('https://internal/busylight-needs-config'));
+					if (configCheck.ok) {
+						const { needsConfig } = await configCheck.json();
+						if (needsConfig) {
+							console.log('Device needs config after join, sending uplink interval command');
+							// Send command to set uplink interval to 5 minutes
+							const configResult = await sendCommand(env, 0x04, 5);
+							console.log('Config command result:', JSON.stringify(configResult));
+							configSent = !configResult.error;
+							// Clear the needs-config flag
+							await stub.fetch(new Request('https://internal/busylight-needs-config', {
+								method: 'POST',
+								body: JSON.stringify({ needsConfig: false }),
+							}));
+						}
+					}
 				}
 			}
 
@@ -211,6 +251,7 @@ export async function handleRequest(request, env, ctx) {
 				received: true,
 				eventType,
 				deviceState: deviceState?.error ? null : deviceState,
+				configSent,
 			});
 		}
 

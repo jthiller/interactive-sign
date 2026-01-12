@@ -37,3 +37,9 @@ CHIRPSTACK_API_URL = "https://console.meteoscientific.com/api"
 # Security secrets (optional but recommended):
 #   wrangler secret put PI_PUBLISHER_SECRET         # Authenticates Pi publisher for /track/register
 #   wrangler secret put CHIRPSTACK_WEBHOOK_SECRET   # Authenticates ChirpStack uplink webhooks
+
+# Observability - persist logs for debugging
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true

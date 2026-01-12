@@ -109,6 +109,32 @@ export class TrackRegistry {
       return this.json(state);
     }
 
+    // POST /downlink-counter - Increment and return downlink counter
+    // Used to determine if every Nth downlink should be confirmed
+    if (request.method === 'POST' && url.pathname === '/downlink-counter') {
+      const counter = (await this.state.storage.get('downlinkCounter')) || 0;
+      const newCounter = counter + 1;
+      await this.state.storage.put('downlinkCounter', newCounter);
+      return this.json({ count: newCounter });
+    }
+
+    // POST /busylight-needs-config - Mark device as needing configuration
+    if (request.method === 'POST' && url.pathname === '/busylight-needs-config') {
+      const data = await request.json();
+      await this.state.storage.put('busylightNeedsConfig', data);
+      console.log(`Busylight config flag set: ${JSON.stringify(data)}`);
+      return this.json({ success: true });
+    }
+
+    // GET /busylight-needs-config - Check if device needs configuration
+    if (request.method === 'GET' && url.pathname === '/busylight-needs-config') {
+      const data = await this.state.storage.get('busylightNeedsConfig');
+      if (!data) {
+        return this.json({ needsConfig: false }, 200);
+      }
+      return this.json(data);
+    }
+
     return new Response('Not found', { status: 404 });
   }
 

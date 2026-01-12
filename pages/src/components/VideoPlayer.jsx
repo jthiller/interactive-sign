@@ -84,7 +84,11 @@ export default function VideoPlayer({
                 videoRef.current.srcObject = stream
                 // Only show connected state when video actually plays
                 videoRef.current.play()
-                  .then(() => setStatus('connected'))
+                  .then(() => {
+                    setStatus('connected')
+                    // Report successful playback to help detect stale sessions
+                    fetch(`${API_BASE}/track/pull-success`, { method: 'POST' }).catch(() => {})
+                  })
                   .catch(() => {
                     // Autoplay blocked - keep background, show play button
                     setStatus('paused')

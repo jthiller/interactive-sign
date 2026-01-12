@@ -143,7 +143,7 @@ class WeriftPublisher {
   }
 
   /**
-   * Send heartbeat to keep track registered
+   * Send heartbeat to keep track registered and check session health
    */
   async sendHeartbeat() {
     try {
@@ -162,6 +162,17 @@ class WeriftPublisher {
       });
       if (res.ok) {
         console.log('Heartbeat sent');
+      }
+
+      // Check session health - restart if unhealthy
+      const healthRes = await fetch(`${WORKER_URL}/track/health`);
+      if (healthRes.ok) {
+        const health = await healthRes.json();
+        if (!health.healthy) {
+          console.warn(`Session unhealthy: ${health.reason}, restarting...`);
+          this.restart();
+          return;
+        }
       }
     } catch (e) {
       console.warn('Heartbeat failed:', e.message);

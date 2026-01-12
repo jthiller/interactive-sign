@@ -135,6 +135,75 @@ export class TrackRegistry {
       return this.json(data);
     }
 
+    // POST /pull-success - Viewer reports successful video playback (simple, no body needed)
+    if (request.method === 'POST' && url.pathname === '/pull-success') {
+      const track = await this.state.storage.get('currentTrack');
+      const now = Date.now();
+
+      await this.state.storage.put('pullStats', {
+        lastSuccess: now,
+        recentFailures: 0,
+        sessionId: track?.sessionId || null,
+      });
+
+      console.log('Viewer reported successful pull');
+      return this.json({ recorded: true });
+    }
+
+    // GET /health - Check if the current track session is healthy
+    if (request.method === 'GET' && url.pathname === '/health') {
+      const track = await this.state.storage.get('currentTrack');
+      const pullStats = await this.state.storage.get('pullStats') || {};
+      const now = Date.now();
+
+      if (!track) {
+        return this.json({ healthy: false, reason: 'no-track' });
+      }
+
+      // Check if track is stale (no heartbeat in 60s)
+      if (now - track.timestamp > 60000) {
+        return this.json({ healthy: false, reason: 'stale-heartbeat' });
+      }
+
+      // Check if there have been recent failures without any successes
+      const hasRecentFailures = pullStats.recentFailures >= 3;
+      const noRecentSuccess = !pullStats.lastSuccess || (now - pullStats.lastSuccess > 300000); // 5 min
+      const sessionMismatch = pullStats.sessionId && pullStats.sessionId !== track.sessionId;
+
+      if (sessionMismatch) {
+        // Stats are from old session, consider healthy until we get new data
+        return this.json({ healthy: true, reason: 'new-session' });
+      }
+
+      if (hasRecentFailures && noRecentSuccess) {
+        return this.json({
+          healthy: false,
+          reason: 'pull-failures',
+          recentFailures: pullStats.recentFailures,
+          lastSuccess: pullStats.lastSuccess,
+        });
+      }
+
+      // If we had a successful pull before but it's been over 1 hour with no new success,
+      // and the session is old, consider it potentially stale
+      const hadPreviousSuccess = pullStats.lastSuccess && pullStats.lastSuccess > 0;
+      const successTooOld = hadPreviousSuccess && (now - pullStats.lastSuccess > 60 * 60 * 1000); // 1 hour
+      if (successTooOld) {
+        return this.json({
+          healthy: false,
+          reason: 'no-recent-viewers',
+          lastSuccess: pullStats.lastSuccess,
+        });
+      }
+
+      return this.json({
+        healthy: true,
+        sessionId: track.sessionId,
+        lastSuccess: pullStats.lastSuccess,
+        recentFailures: pullStats.recentFailures || 0,
+      });
+    }
+
     return new Response('Not found', { status: 404 });
   }
 

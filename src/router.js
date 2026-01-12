@@ -47,8 +47,12 @@ export async function handleRequest(request, env, ctx) {
 		if (pathname.startsWith('/track/')) {
 			const trackPath = pathname.replace('/track', '');
 
-			// Authenticate write operations (register, heartbeat, unregister)
-			if (method === 'POST' || method === 'DELETE') {
+			// Public endpoints (no auth needed)
+			const publicPaths = ['/current', '/health', '/pull-success'];
+			const isPublicPath = publicPaths.some(p => trackPath === p || trackPath.startsWith(p));
+
+			// Authenticate write operations (register, heartbeat, unregister) except public paths
+			if ((method === 'POST' || method === 'DELETE') && !isPublicPath) {
 				const publisherSecret = request.headers.get('X-Publisher-Secret');
 				const expectedSecret = env.PI_PUBLISHER_SECRET;
 

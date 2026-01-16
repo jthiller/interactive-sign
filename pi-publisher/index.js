@@ -8,12 +8,16 @@
 
 import { createSocket } from 'dgram';
 import { spawn } from 'child_process';
+import { networkInterfaces } from 'os';
 import {
   RTCPeerConnection,
   RTCRtpCodecParameters,
   MediaStreamTrack,
   RtpPacket,
 } from 'werift';
+
+// Network interface preference order (ethernet first, then WiFi)
+const PREFERRED_INTERFACES = ['eth0', 'en0', 'wlan0', 'en1'];
 
 // Configuration
 const WORKER_URL = process.env.WORKER_URL || 'http://localhost:8787';
@@ -49,6 +53,41 @@ class WeriftPublisher {
     this.packetCount = 0;
     this.consecutiveHeartbeatFailures = 0;
     this.isRestarting = false;
+  }
+
+  /**
+   * Get preferred network interface IP address
+   * Prefers ethernet over WiFi for stable WebRTC connections
+   */
+  getPreferredInterfaceIP() {
+    const nets = networkInterfaces();
+
+    // Try each preferred interface in order
+    for (const ifaceName of PREFERRED_INTERFACES) {
+      const iface = nets[ifaceName];
+      if (iface) {
+        for (const addr of iface) {
+          // Only use IPv4, non-internal addresses
+          if (addr.family === 'IPv4' && !addr.internal) {
+            console.log(`Using network interface: ${ifaceName} (${addr.address})`);
+            return addr.address;
+          }
+        }
+      }
+    }
+
+    // Fallback: find any non-internal IPv4 address
+    for (const [name, iface] of Object.entries(nets)) {
+      for (const addr of iface) {
+        if (addr.family === 'IPv4' && !addr.internal) {
+          console.log(`Using fallback interface: ${name} (${addr.address})`);
+          return addr.address;
+        }
+      }
+    }
+
+    console.warn('No suitable network interface found, using default');
+    return undefined;
   }
 
   /**
@@ -355,8 +394,12 @@ class WeriftPublisher {
       }
     });
 
+    // Get preferred network interface for ICE candidates
+    const preferredIP = this.getPreferredInterfaceIP();
+
     // Create peer connection with H.264 codec
-    this.pc = new RTCPeerConnection({
+    // Use iceInterfaceAddresses to restrict ICE candidates to preferred interface
+    const pcConfig = {
       codecs: {
         audio: [],
         video: [
@@ -369,7 +412,14 @@ class WeriftPublisher {
           }),
         ],
       },
-    });
+    };
+
+    // If we have a preferred IP, restrict ICE candidates to that interface
+    if (preferredIP) {
+      pcConfig.iceInterfaceAddresses = [preferredIP];
+    }
+
+    this.pc = new RTCPeerConnection(pcConfig);
 
     // Add track to peer connection
     this.pc.addTransceiver(this.track, { direction: 'sendonly' });

@@ -24,6 +24,8 @@ const CLOUDFLARE_API_BASE = `https://rtc.live.cloudflare.com/v1/apps/${CLOUDFLAR
 
 const TRACK_NAME = 'webcam-video';
 const HEARTBEAT_INTERVAL = 30000;
+const HEARTBEAT_TIMEOUT = 10000; // 10 second timeout for heartbeat requests
+const MAX_HEARTBEAT_FAILURES = 3; // Restart after this many consecutive failures
 
 // Video settings
 const WIDTH = 1280;
@@ -45,6 +47,24 @@ class WeriftPublisher {
     this.heartbeatTimer = null;
     this.rtpPort = null;
     this.packetCount = 0;
+    this.consecutiveHeartbeatFailures = 0;
+    this.isRestarting = false;
+  }
+
+  /**
+   * Fetch with timeout
+   */
+  async fetchWithTimeout(url, options, timeout = HEARTBEAT_TIMEOUT) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
   }
 
   /**
@@ -146,13 +166,20 @@ class WeriftPublisher {
    * Send heartbeat to keep track registered and check session health
    */
   async sendHeartbeat() {
+    // Prevent heartbeat during restart
+    if (this.isRestarting) {
+      console.log('Skipping heartbeat - restart in progress');
+      return;
+    }
+
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (PI_PUBLISHER_SECRET) {
         headers['X-Publisher-Secret'] = PI_PUBLISHER_SECRET;
       }
 
-      const res = await fetch(`${WORKER_URL}/track/register`, {
+      // Use timeout to prevent hanging on network issues
+      const res = await this.fetchWithTimeout(`${WORKER_URL}/track/register`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -160,23 +187,56 @@ class WeriftPublisher {
           trackName: TRACK_NAME,
         }),
       });
-      if (res.ok) {
-        console.log('Heartbeat sent');
+
+      if (!res.ok) {
+        throw new Error(`Register failed with status ${res.status}`);
       }
 
       // Check session health - restart if unhealthy
-      const healthRes = await fetch(`${WORKER_URL}/track/health`);
+      const healthRes = await this.fetchWithTimeout(`${WORKER_URL}/track/health`);
       if (healthRes.ok) {
         const health = await healthRes.json();
         if (!health.healthy) {
           console.warn(`Session unhealthy: ${health.reason}, restarting...`);
-          this.restart();
+          this.triggerRestart();
           return;
         }
       }
+
+      // Success - reset failure counter
+      if (this.consecutiveHeartbeatFailures > 0) {
+        console.log(`Heartbeat recovered after ${this.consecutiveHeartbeatFailures} failures`);
+      }
+      this.consecutiveHeartbeatFailures = 0;
+      console.log('Heartbeat sent');
+
     } catch (e) {
-      console.warn('Heartbeat failed:', e.message);
+      this.consecutiveHeartbeatFailures++;
+      const isAbort = e.name === 'AbortError';
+      console.warn(
+        `Heartbeat failed (${this.consecutiveHeartbeatFailures}/${MAX_HEARTBEAT_FAILURES}): ` +
+        `${isAbort ? 'timeout' : e.message}`
+      );
+
+      if (this.consecutiveHeartbeatFailures >= MAX_HEARTBEAT_FAILURES) {
+        console.error(
+          `${MAX_HEARTBEAT_FAILURES} consecutive heartbeat failures - ` +
+          'likely network issue or stale session, restarting...'
+        );
+        this.triggerRestart();
+      }
     }
+  }
+
+  /**
+   * Trigger a restart (debounced to prevent multiple restarts)
+   */
+  triggerRestart() {
+    if (this.isRestarting) {
+      console.log('Restart already in progress, skipping');
+      return;
+    }
+    this.restart();
   }
 
   /**
@@ -378,10 +438,32 @@ class WeriftPublisher {
    * Restart the publisher
    */
   async restart() {
+    if (this.isRestarting) {
+      console.log('Restart already in progress');
+      return;
+    }
+
+    this.isRestarting = true;
     console.log('Restarting publisher...');
-    this.stop();
-    await new Promise((r) => setTimeout(r, 5000));
-    await this.start();
+
+    try {
+      this.stop();
+      // Reset failure counter before restart attempt
+      this.consecutiveHeartbeatFailures = 0;
+      await new Promise((r) => setTimeout(r, 5000));
+      await this.start();
+      console.log('Restart completed successfully');
+    } catch (err) {
+      console.error('Restart failed:', err.message);
+      // Wait longer before next retry to avoid rapid restart loops
+      console.log('Waiting 30s before next restart attempt...');
+      await new Promise((r) => setTimeout(r, 30000));
+      this.isRestarting = false;
+      // Retry
+      this.restart();
+    } finally {
+      this.isRestarting = false;
+    }
   }
 
   /**

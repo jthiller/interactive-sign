@@ -86,6 +86,8 @@ ssh jthiller@ledsign.local 'sudo systemctl restart webcam-publisher'
 ssh jthiller@ledsign.local 'journalctl -u webcam-publisher -f'
 ```
 
+**Note:** SSH requires password authentication. Ask the user for the Pi password before attempting connections.
+
 ## API Endpoints
 
 | Endpoint | Method | Auth | Description |

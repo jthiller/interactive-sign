@@ -211,6 +211,21 @@ class WeriftPublisher {
       return;
     }
 
+    // Check WebRTC connection state as a safety net
+    if (this.pc) {
+      const connState = this.pc.connectionState;
+      const iceState = this.pc.iceConnectionState;
+      if (connState === 'failed' || connState === 'closed' ||
+          iceState === 'failed' || iceState === 'closed') {
+        console.error(`WebRTC in bad state (conn: ${connState}, ice: ${iceState}), restarting...`);
+        this.triggerRestart();
+        return;
+      }
+      if (connState === 'disconnected' || iceState === 'disconnected') {
+        console.warn(`WebRTC disconnected (conn: ${connState}, ice: ${iceState}), will check again next heartbeat`);
+      }
+    }
+
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (PI_PUBLISHER_SECRET) {
@@ -427,15 +442,37 @@ class WeriftPublisher {
     // Connection state monitoring
     this.pc.iceConnectionStateChange.subscribe((state) => {
       console.log('ICE connection state:', state);
+      if (state === 'disconnected') {
+        console.warn('ICE disconnected, will restart if not recovered...');
+        // Give it a moment to recover, then restart
+        setTimeout(() => {
+          if (this.pc && this.pc.iceConnectionState === 'disconnected') {
+            console.error('ICE still disconnected after timeout, restarting...');
+            this.triggerRestart();
+          }
+        }, 10000);
+      } else if (state === 'failed') {
+        console.error('ICE connection failed, restarting...');
+        this.triggerRestart();
+      }
     });
 
     this.pc.connectionStateChange.subscribe((state) => {
       console.log('Connection state:', state);
       if (state === 'connected') {
         console.log('🎥 WebRTC connected! Streaming H.264...');
+      } else if (state === 'disconnected') {
+        console.warn('Connection disconnected, will restart if not recovered...');
+        // Give it a moment to recover, then restart
+        setTimeout(() => {
+          if (this.pc && this.pc.connectionState === 'disconnected') {
+            console.error('Connection still disconnected after timeout, restarting...');
+            this.triggerRestart();
+          }
+        }, 10000);
       } else if (state === 'failed') {
         console.error('Connection failed, restarting...');
-        this.restart();
+        this.triggerRestart();
       }
     });
 

@@ -179,6 +179,53 @@ The systemd service at `/etc/systemd/system/webcam-publisher.service` has `WORKE
 ### 5. CORS Origins
 Update `ALLOWED_ORIGINS` in `src/router.js` when adding new frontend domains.
 
+### 6. WebRTC Stale Sessions
+The Pi's WebRTC connection can silently degrade while RTP packets continue to be sent locally. Symptoms: video shows static, Pi logs show "RTP packets sent" incrementing but no "WebRTC connected!" on restart. The Pi handles `'disconnected'` and `'failed'` states with automatic restart after 10-second timeout. If the stream stops working, restart the service: `sudo systemctl restart webcam-publisher`
+
+## Troubleshooting
+
+### Video stream not working (showing static)
+
+1. **Check API track status:**
+   ```bash
+   curl -s https://api.joeyhiller.com/track/current | jq .
+   ```
+   Should return `sessionId`, `trackName`, and recent `timestamp` (within 60 seconds).
+
+2. **Check track health:**
+   ```bash
+   curl -s https://api.joeyhiller.com/track/health | jq .
+   ```
+   Should return `healthy: true`. If `reason: "new-session"`, no viewers have pulled recently.
+
+3. **Check Pi publisher logs:**
+   ```bash
+   ssh jthiller@ledsign.local 'journalctl -u webcam-publisher -n 50 --no-pager'
+   ```
+   Look for:
+   - "🎥 WebRTC connected!" - connection is good
+   - "RTP packets sent: X" - FFmpeg is capturing and sending
+   - "Heartbeat sent" - registration is working
+   - Any errors about connection state
+
+4. **Check FFmpeg is running:**
+   ```bash
+   ssh jthiller@ledsign.local 'ps aux | grep ffmpeg'
+   ```
+
+5. **Restart the publisher (fixes most issues):**
+   ```bash
+   ssh jthiller@ledsign.local 'sudo systemctl restart webcam-publisher'
+   ```
+   Then check logs to confirm "WebRTC connected!" appears.
+
+6. **Check browser console** for WebRTC or PartyTracks errors.
+
+### Common causes
+- **Stale WebRTC session**: Pi was running but connection degraded. Restart fixes it.
+- **Network change**: Pi switched networks or got new IP. Restart needed.
+- **Cloudflare session expired**: Sessions can timeout. Restart creates new session.
+
 ## File Structure
 
 ```

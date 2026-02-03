@@ -30,6 +30,9 @@ const TRACK_NAME = 'webcam-video';
 const HEARTBEAT_INTERVAL = 30000;
 const HEARTBEAT_TIMEOUT = 10000; // 10 second timeout for heartbeat requests
 const MAX_HEARTBEAT_FAILURES = 3; // Restart after this many consecutive failures
+const SESSION_CHECK_INTERVAL = 60000; // Check session health every 60 seconds
+const SESSION_CHECK_FAILURES_THRESHOLD = 3; // Restart after this many consecutive failed checks
+const MAX_SESSION_AGE_MS = 24 * 60 * 60 * 1000; // Force restart after 24 hours as preventive measure
 
 // Video settings
 const WIDTH = 1280;
@@ -53,6 +56,9 @@ class WeriftPublisher {
     this.packetCount = 0;
     this.consecutiveHeartbeatFailures = 0;
     this.isRestarting = false;
+    this.statsTimer = null;
+    this.staleBytesChecks = 0;
+    this.sessionStartTime = null;
   }
 
   /**
@@ -138,6 +144,7 @@ class WeriftPublisher {
 
     const data = await res.json();
     this.sessionId = data.sessionId;
+    this.sessionStartTime = Date.now();
     console.log('Session created:', this.sessionId);
     return this.sessionId;
   }
@@ -277,6 +284,75 @@ class WeriftPublisher {
           `${MAX_HEARTBEAT_FAILURES} consecutive heartbeat failures - ` +
           'likely network issue or stale session, restarting...'
         );
+        this.triggerRestart();
+      }
+    }
+  }
+
+  /**
+   * Validate session with Cloudflare API to detect stale sessions.
+   * If the session no longer exists or is invalid, trigger restart.
+   */
+  async checkSessionHealth() {
+    if (this.isRestarting || !this.sessionId) {
+      return;
+    }
+
+    // Preventive restart: force new session after max age to avoid stale connections
+    const sessionAge = Date.now() - this.sessionStartTime;
+    if (sessionAge > MAX_SESSION_AGE_MS) {
+      const hours = Math.floor(sessionAge / (60 * 60 * 1000));
+      console.log(`Session age (${hours}h) exceeds max (24h). Preventive restart...`);
+      this.triggerRestart();
+      return;
+    }
+
+    try {
+      // Query Cloudflare to check if our session is still valid
+      const res = await this.fetchWithTimeout(
+        `${CLOUDFLARE_API_BASE}/sessions/${this.sessionId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
+          },
+        },
+        HEARTBEAT_TIMEOUT
+      );
+
+      if (!res.ok) {
+        this.staleBytesChecks++;
+        console.warn(
+          `Session validation failed: ${res.status} ` +
+          `(check ${this.staleBytesChecks}/${SESSION_CHECK_FAILURES_THRESHOLD})`
+        );
+
+        if (this.staleBytesChecks >= SESSION_CHECK_FAILURES_THRESHOLD) {
+          console.error('Session no longer valid with Cloudflare. Restarting...');
+          this.triggerRestart();
+          return;
+        }
+      } else {
+        // Session is valid
+        if (this.staleBytesChecks > 0) {
+          console.log('Session validation recovered');
+        }
+        this.staleBytesChecks = 0;
+
+        // Log session age for monitoring
+        const uptimeMinutes = Math.floor((Date.now() - this.sessionStartTime) / 60000);
+        console.log(`Session health OK (uptime: ${uptimeMinutes} min, packets: ${this.packetCount})`);
+      }
+    } catch (err) {
+      this.staleBytesChecks++;
+      const isAbort = err.name === 'AbortError';
+      console.warn(
+        `Session health check failed (${this.staleBytesChecks}/${SESSION_CHECK_FAILURES_THRESHOLD}): ` +
+        `${isAbort ? 'timeout' : err.message}`
+      );
+
+      if (this.staleBytesChecks >= SESSION_CHECK_FAILURES_THRESHOLD) {
+        console.error('Session health checks failing. Restarting...');
         this.triggerRestart();
       }
     }
@@ -518,6 +594,9 @@ class WeriftPublisher {
     // Start heartbeat
     this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), HEARTBEAT_INTERVAL);
 
+    // Start session health monitoring to detect stale sessions
+    this.statsTimer = setInterval(() => this.checkSessionHealth(), SESSION_CHECK_INTERVAL);
+
     console.log('Werift H.264 publisher running');
   }
 
@@ -535,8 +614,9 @@ class WeriftPublisher {
 
     try {
       this.stop();
-      // Reset failure counter before restart attempt
+      // Reset failure counters before restart attempt
       this.consecutiveHeartbeatFailures = 0;
+      this.staleBytesChecks = 0;
       await new Promise((r) => setTimeout(r, 5000));
       await this.start();
       console.log('Restart completed successfully');
@@ -560,6 +640,11 @@ class WeriftPublisher {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
+    }
+
+    if (this.statsTimer) {
+      clearInterval(this.statsTimer);
+      this.statsTimer = null;
     }
 
     if (this.ffmpeg) {

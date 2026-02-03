@@ -182,7 +182,14 @@ The systemd service at `/etc/systemd/system/webcam-publisher.service` has `WORKE
 Update `ALLOWED_ORIGINS` in `src/router.js` when adding new frontend domains.
 
 ### 6. WebRTC Stale Sessions
-The Pi's WebRTC connection can silently degrade while RTP packets continue to be sent locally. Symptoms: video shows static, Pi logs show "RTP packets sent" incrementing but no "WebRTC connected!" on restart. The Pi handles `'disconnected'` and `'failed'` states with automatic restart after 10-second timeout. If the stream stops working, restart the service: `sudo systemctl restart webcam-publisher`
+The Pi's WebRTC connection can silently degrade while RTP packets continue to be sent locally. Symptoms: video shows static, Pi logs show "RTP packets sent" incrementing but no "WebRTC connected!" on restart.
+
+**Automatic recovery mechanisms:**
+- ICE `disconnected`/`failed` states trigger restart after 10-second timeout
+- Session health check every 60s validates session with Cloudflare API (3 failures = restart)
+- Preventive restart after 24 hours to avoid long-running stale sessions
+
+If the stream stops working despite these checks, manually restart: `sudo systemctl restart webcam-publisher`
 
 ## Troubleshooting
 
